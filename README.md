@@ -13,7 +13,7 @@ Instead of settling for generic landing pages, LSP pushes agents to create cohes
 | Project | Description |
 |---|---|
 | [Obsidian](https://obsidian-lps.pages.dev) | Premium architectural lighting |
-| [Aurora](https://aurora-d4t.pages.dev) | Cinematic underwater exploration |
+| [Aurora](https://aurora-dt4.pages.dev) | Cinematic underwater exploration |
 
 These projects demonstrate how LSP can be applied to different brands, visual themes, and storytelling experiences.
 
