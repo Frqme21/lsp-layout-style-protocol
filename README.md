@@ -56,10 +56,10 @@ SKILL.md
 For agents that support the Agent Skills format, you can clone the repository and use the skill according to your agent's installation conventions.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/lsp-layout-style-protocol.git
+git clone https://github.com/Frqme21/lsp-layout-style-protocol.git
 ```
 
-Replace `YOUR_USERNAME` with your GitHub username.
+
 
 ## Usage
 
