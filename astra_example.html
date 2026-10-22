@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTRA - Cinematic Star Sequence</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- GSAP Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syncopate:wght@700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            brand: ['Syncopate', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          },
+          colors: {
+            brand: {
+              obsidian: '#090a0f',
+              surface: '#12151e',
+              border: '#1f2433',
+              purple: '#818cf8',
+              indigo: '#6366f1',
+              cyan: '#06b6d4',
+              pink: '#ec4899',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #090a0f;
+      color: #f9fafb;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .solid-card {
+      background: #12151e;
+      border: 1px solid #1f2433;
+      border-radius: 1rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+    }
+
+    .solid-input {
+      background: #090a0f;
+      border: 1px solid #1f2433;
+      transition: all 0.3s ease;
+    }
+
+    .solid-input:focus-within, .solid-input:focus {
+      background: #0d1017;
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+      outline: none;
+    }
+
+    .star-glow-aura {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, rgba(6,182,212,0.12) 50%, rgba(0,0,0,0) 70%);
+      filter: blur(50px);
+      pointer-events: none;
+      z-index: -1;
+      transform: translate(-50%, -50%);
+    }
+
+    .star-svg-filter {
+      filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))
+              drop-shadow(0 0 30px rgba(6, 182, 212, 0.4));
+    }
+
+    .brand-gradient-text {
+      background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 45%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-shimmer {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .btn-shimmer::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        45deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 80%
+      );
+      transform: rotate(30deg) translateY(-100%);
+      transition: transform 0.8s ease;
+    }
+
+    .btn-shimmer:hover::after {
+      transform: rotate(30deg) translateY(100%);
+    }
+
+    .bg-grid-pattern {
+      background-size: 60px 60px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    }
+  </style>
+</head>
+
+<body class="w-screen h-screen bg-[#090a0f] text-gray-100 relative bg-grid-pattern overflow-hidden flex flex-col justify-between p-6">
+
+  <!-- Ambient Particle Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Top Header Bar -->
+  <header class="w-full max-w-7xl mx-auto flex justify-between items-center z-50 relative">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+      <span class="text-[10px] font-mono tracking-widest text-gray-400 uppercase">ASTRA CORE v5.4</span>
+    </div>
+    <button id="audio-toggle" onclick="toggleAudio()" class="solid-card px-3.5 py-2 rounded-xl text-xs font-mono text-gray-400 hover:text-white flex items-center gap-2 transition">
+      <i id="audio-icon" class="fa-solid fa-volume-high text-cyan-400"></i>
+      <span id="audio-label">AUDIO ON</span>
+    </button>
+  </header>
+
+
+  <!-- ========================================================================= -->
+  <!-- CENTRAL & HEADER LOGO / BRAND CONTAINER                                   -->
+  <!-- ========================================================================= -->
+  <div id="brand-container" class="fixed z-40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+    
+    <!-- Glow Backlight -->
+    <div id="star-glow" class="star-glow-aura"></div>
+
+    <!-- MAIN UNIFIED STAR SVG -->
+    <div id="star-icon-wrapper" class="relative flex items-center justify-center">
+      
+      <svg id="main-star-svg" class="star-svg-filter w-40 h-40 md:w-48 md:h-48 overflow-visible" viewBox="0 0 100 100" fill="none">
+        <defs>
+          <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#818cf8" />
+            <stop offset="50%" stop-color="#6366f1" />
+            <stop offset="100%" stop-color="#06b6d4" />
+          </linearGradient>
+          <linearGradient id="innerGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="100%" stop-color="#a5b4fc" />
+          </linearGradient>
+        </defs>
+
+        <path d="M50 0 C52 35, 65 48, 100 50 C65 52, 52 65, 50 100 C48 65, 35 52, 0 50 C35 48, 48 35, 50 0 Z" 
+              fill="url(#starGradient)" />
+        <path d="M50 20 C51 40, 60 49, 80 50 C60 51, 51 60, 50 80 C49 60, 40 51, 20 50 C40 49, 49 40, 50 20 Z" 
+              fill="url(#innerGradient)" opacity="0.85" />
+        <circle cx="50" cy="50" r="4.5" fill="#ffffff" />
+      </svg>
+
+
+      <!-- QUADRANT PIECES (Visible during split/recombine) -->
+      <div id="split-quadrants-container" class="absolute inset-0 opacity-0 pointer-events-none">
+        <!-- Top-Left Quadrant -->
+        <svg id="quad-tl" class="absolute w-40 h-40 md:w-48 md:h-48 -top-20 -left-20 md:-top-24 md:-left-24 star-svg-filter" viewBox="0 0 100 100" fill="none">
+          <path d="M50 50 L50 0 C52 35, 48 48, 0 50 Z" fill="url(#starGradient)" />
+          <path d="M50 50 L50 20 C51 40, 40 49, 20 50 Z" fill="url(#innerGradient)" opacity="0.85" />
+          <circle cx="50" cy="50" r="2.25" fill="#ffffff" />
+        </svg>
+
+        <!-- Top-Right Quadrant -->
+        <svg id="quad-tr" class="absolute w-40 h-40 md:w-48 md:h-48 -top-20 -right-20 md:-top-24 md:-right-24 star-svg-filter" viewBox="0 0 100 100" fill="none">
+          <path d="M50 50 L100 50 C65 52, 52 48, 50 0 Z" fill="url(#starGradient)" />
+          <path d="M50 50 L80 50 C60 51, 51 40, 50 20 Z" fill="url(#innerGradient)" opacity="0.85" />
+          <circle cx="50" cy="50" r="2.25" fill="#ffffff" />
+        </svg>
+
+        <!-- Bottom-Right Quadrant -->
+        <svg id="quad-br" class="absolute w-40 h-40 md:w-48 md:h-48 -bottom-20 -right-20 md:-bottom-24 md:-right-24 star-svg-filter" viewBox="0 0 100 100" fill="none">
+          <path d="M50 50 L50 100 C48 65, 52 52, 100 50 Z" fill="url(#starGradient)" />
+          <path d="M50 50 L50 80 C49 60, 60 51, 80 50 Z" fill="url(#innerGradient)" opacity="0.85" />
+          <circle cx="50" cy="50" r="2.25" fill="#ffffff" />
+        </svg>
+
+        <!-- Bottom-Left Quadrant -->
+        <svg id="quad-bl" class="absolute w-40 h-40 md:w-48 md:h-48 -bottom-20 -left-20 md:-bottom-24 md:-left-24 star-svg-filter" viewBox="0 0 100 100" fill="none">
+          <path d="M50 50 L0 50 C35 48, 48 52, 50 100 Z" fill="url(#starGradient)" />
+          <path d="M50 50 L20 50 C40 49, 49 60, 50 80 Z" fill="url(#innerGradient)" opacity="0.85" />
+          <circle cx="50" cy="50" r="2.25" fill="#ffffff" />
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- Brand Typography (Types out when logo glides to top header) -->
+    <div id="brand-text" class="overflow-hidden w-0 opacity-0 whitespace-nowrap ml-4 flex flex-col justify-center">
+      <h1 id="brand-title" class="font-brand text-2xl md:text-3xl tracking-[0.25em] brand-gradient-text font-extrabold flex">
+        <!-- Populated via JS -->
+      </h1>
+      <p class="text-[9px] tracking-[0.4em] text-cyan-300 uppercase font-mono pl-0.5">
+        Neural Gateway
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- STEP 1: INITIAL STATE (Centered Star + Login Button Below)                -->
+  <!-- ========================================================================= -->
+  <div id="start-screen-card" class="fixed z-30 top-1/2 left-1/2 -translate-x-1/2 translate-y-36 w-full max-w-xs px-4 text-center">
+    <button onclick="startSequence()" class="btn-shimmer w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-cyan-500 to-indigo-600 text-white font-semibold text-xs tracking-widest uppercase shadow-2xl shadow-indigo-500/30 flex items-center justify-center gap-3 border border-cyan-400/30">
+      <i class="fa-solid fa-arrow-right-to-bracket text-cyan-200"></i>
+      <span>Log In</span>
+    </button>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- STEP 3: LOGIN FORM CARD (Appears below top logo after glide & typing)     -->
+  <!-- ========================================================================= -->
+  <div id="login-form-card" class="fixed z-30 top-1/2 left-1/2 -translate-x-1/2 translate-y-20 w-full max-w-sm px-4 opacity-0 pointer-events-none scale-95">
+    <div class="solid-card p-8 space-y-5 shadow-2xl">
+      <div class="text-center space-y-1">
+        <h2 class="text-lg font-bold text-white tracking-wide font-brand">SECURE LOGIN</h2>
+        <p class="text-xs text-gray-400">Authenticate neural session credentials</p>
+      </div>
+
+      <form onsubmit="submitCredentials(event)" class="space-y-4 pt-1">
+        <div>
+          <label class="block text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1.5">Identifier</label>
+          <div class="solid-input rounded-xl flex items-center px-3.5 py-3 text-xs">
+            <i class="fa-regular fa-envelope text-cyan-400 mr-3"></i>
+            <input type="email" required value="commander@astra.ai" class="bg-transparent border-none outline-none w-full text-white placeholder-gray-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-mono text-gray-400 uppercase tracking-widest mb-1.5">Access Key</label>
+          <div class="solid-input rounded-xl flex items-center px-3.5 py-3 text-xs">
+            <i class="fa-solid fa-key text-cyan-400 mr-3"></i>
+            <input type="password" required value="••••••••••••" class="bg-transparent border-none outline-none w-full text-white placeholder-gray-500">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-shimmer w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-xs tracking-wider uppercase shadow-lg shadow-indigo-500/20 transition-all pt-3">
+          Submit Credentials
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- QUADRANT MATRIX CARD (Fades in when star pieces reach the 4 corners)      -->
+  <!-- ========================================================================= -->
+  <div id="quadrant-matrix-card" class="fixed z-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm px-4 opacity-0 scale-90 pointer-events-none">
+    <div class="solid-card p-8 text-center space-y-6 border border-cyan-500/30 shadow-2xl shadow-cyan-500/10">
+      <div class="w-12 h-12 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 flex items-center justify-center mx-auto text-lg shadow-inner">
+        <i class="fa-solid fa-atom animate-spin"></i>
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-xl font-bold text-white tracking-wider font-brand">QUADRANT MATRIX</h2>
+        <p class="text-xs text-gray-300">Quadrant Matrix Active. Star split along '+' axis into 4 corner nodes.</p>
+      </div>
+
+      <button onclick="triggerReassembly()" class="btn-shimmer w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-semibold text-xs tracking-widest uppercase shadow-lg shadow-cyan-500/20">
+        Initialize Core
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- FINAL SUCCESS / DESTINATION CARD                                          -->
+  <!-- ========================================================================= -->
+  <div id="final-success-card" class="fixed z-30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 opacity-0 scale-95 pointer-events-none">
+    <div class="solid-card p-8 md:p-10 text-center space-y-6 border border-emerald-400/30 shadow-2xl shadow-emerald-500/20">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono uppercase tracking-widest">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Portal Unlocked
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white font-brand brand-gradient-text tracking-wide">
+          WELCOME TO ASTRA
+        </h1>
+        <p class="text-xs text-gray-300 leading-relaxed">
+          Logo reassembled successfully from corner nodes. All 8 cinematic stages executed with buttery-smooth 60fps precision.
+        </p>
+      </div>
+
+      <button onclick="resetSequence()" class="btn-shimmer w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-cyan-500 to-indigo-600 text-white font-semibold text-xs tracking-widest uppercase shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-rotate-right text-xs"></i>
+        <span>Replay Full Sequence</span>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- Footer Status Bar -->
+  <footer class="w-full max-w-7xl mx-auto flex justify-between items-center z-20 relative text-[10px] font-mono text-gray-500">
+    <span id="stage-indicator">STAGE 1: CENTERED STAR & LOGIN BUTTON</span>
+    <span id="fps-counter">60.0 FPS</span>
+  </footer>
+
+
+  <!-- ========================================================================= -->
+  <!-- CHOREOGRAPHY & AUDIO SCRIPT                                               -->
+  <!-- ========================================================================= -->
+  <script>
+    let soundEnabled = true;
+    let audioCtx = null;
+    let currentStep = 0;
+
+    // --- WEB AUDIO SYNTHESIZER ---
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playTone(freq, type, duration, rampVal = 0.001) {
+      if (!soundEnabled) return;
+      initAudio();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(rampVal, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (type === 'click') {
+        playTone(600, 'sine', 0.15);
+      } else if (type === 'whoosh') {
+        playTone(300, 'sawtooth', 0.6);
+        setTimeout(() => playTone(650, 'sine', 0.7), 120);
+      } else if (type === 'split') {
+        playTone(800, 'square', 0.25);
+        setTimeout(() => playTone(1200, 'sine', 0.4), 100);
+      } else if (type === 'assemble') {
+        playTone(500, 'sawtooth', 0.5);
+        setTimeout(() => playTone(950, 'triangle', 0.6), 180);
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('audio-icon').className = soundEnabled ? 'fa-solid fa-volume-high text-cyan-400' : 'fa-solid fa-volume-xmark text-gray-500';
+      document.getElementById('audio-label').textContent = soundEnabled ? 'AUDIO ON' : 'AUDIO OFF';
+      if (soundEnabled) playTone(523.25, 'sine', 0.2);
+    }
+
+
+    // --- AMBIENT PARTICLE CANVAS ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let shockwaves = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 1.5 + 0.2;
+        this.speedX = (Math.random() - 0.5) * 0.25;
+        this.speedY = (Math.random() - 0.5) * 0.25;
+        this.alpha = Math.random() * 0.5 + 0.1;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = '#06b6d4';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class Shockwave {
+      constructor(x, y, color) {
+        this.x = x; this.y = y; this.radius = 1; this.maxRadius = 400; this.alpha = 1; this.color = color || '#06b6d4';
+      }
+      update() { this.radius += 10; this.alpha -= 0.025; }
+      draw() {
+        if (this.alpha <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < 65; i++) particles.push(new Particle());
+
+    function triggerShockwave(x, y, color) {
+      shockwaves.push(new Shockwave(x || window.innerWidth/2, y || window.innerHeight/2, color));
+    }
+
+    function renderLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      shockwaves.forEach((sw, idx) => {
+        sw.update(); sw.draw();
+        if (sw.alpha <= 0) shockwaves.splice(idx, 1);
+      });
+      requestAnimationFrame(renderLoop);
+    }
+    renderLoop();
+
+
+    // --- POPULATE BRAND LETTERS ---
+    const brandTitleContainer = document.getElementById('brand-title');
+    "ASTRA".split("").forEach(letter => {
+      const span = document.createElement('span');
+      span.textContent = letter;
+      span.className = "inline-block opacity-0 translate-y-2";
+      brandTitleContainer.appendChild(span);
+    });
+
+    function updateIndicator(text) {
+      document.getElementById('stage-indicator').textContent = text;
+    }
+
+
+    // ========================================================================= -->
+    // EXPLICIT CHOREOGRAPHY SEQUENCE                                            -->
+    // ========================================================================= -->
+
+    // 2. CLICK LOGIN BUTTON: Star smoothly shrinks, glides up along a curved path to top center while "ASTRA" writes itself
+    function startSequence() {
+      if (currentStep !== 0) return;
+      currentStep = 1;
+      updateIndicator('STAGE 2: LOGO GLIDING UP & BRAND NAME TYPING');
+      playSound('whoosh');
+
+      const tl = gsap.timeline();
+
+      tl.to("#start-screen-card", {
+        duration: 0.5,
+        opacity: 0,
+        y: 20,
+        pointerEvents: "none",
+        ease: "power2.in"
+      })
+
+      // Curved path glide approximation using bezier coordinates
+      .to("#brand-container", {
+        duration: 1.2,
+        top: window.innerWidth < 768 ? "48px" : "40px",
+        left: "50%",
+        ease: "power3.inOut"
+      }, "-=0.2")
+
+      .to("#main-star-svg", {
+        duration: 1.2,
+        width: window.innerWidth < 768 ? "38px" : "44px",
+        height: window.innerWidth < 768 ? "38px" : "44px",
+        ease: "power3.inOut"
+      }, "<")
+
+      .to("#star-glow", {
+        duration: 1.0,
+        width: "140px",
+        height: "140px",
+        opacity: 0.45,
+        ease: "power2.inOut"
+      }, "<")
+
+      .to("#brand-text", {
+        duration: 0.3,
+        width: "auto",
+        opacity: 1,
+        ease: "power2.out"
+      }, "-=0.6")
+
+      .to("#brand-title span", {
+        duration: 0.5,
+        opacity: 1,
+        y: 0,
+        stagger: 0.08,
+        ease: "power2.out"
+      }, "<")
+
+      // 3. CREDENTIAL FORM: Clean opaque dark-mode login card fades in below top header
+      .to("#login-form-card", {
+        duration: 0.8,
+        opacity: 1,
+        scale: 1,
+        y: "0px",
+        pointerEvents: "auto",
+        ease: "back.out(1.2)"
+      }, "-=0.4");
+    }
+
+
+    // 4. SUBMIT CREDENTIALS: Login card fades out. Star and brand header glide back to center, merging back into unified star.
+    function submitCredentials(e) {
+      e.preventDefault();
+      if (currentStep !== 1) return;
+      currentStep = 2;
+      updateIndicator('STAGE 4: RETURNING TO CENTER & MERGING UNIFIED STAR');
+      playSound('click');
+
+      const tl = gsap.timeline();
+
+      tl.to("#login-form-card", {
+        duration: 0.5,
+        opacity: 0,
+        scale: 0.9,
+        pointerEvents: "none",
+        ease: "power2.in"
+      })
+
+      .to("#brand-text", {
+        duration: 0.4,
+        opacity: 0,
+        width: 0,
+        ease: "power2.in"
+      }, "<")
+
+      // Glide back to exact center of screen
+      .to("#brand-container", {
+        duration: 1.0,
+        top: "50%",
+        left: "50%",
+        ease: "power3.inOut"
+      }, "-=0.1")
+
+      .to("#main-star-svg", {
+        duration: 1.0,
+        width: "150px",
+        height: "150px",
+        rotation: 180,
+        ease: "power3.inOut"
+      }, "<")
+
+      .to("#star-glow", {
+        duration: 1.0,
+        width: "380px",
+        height: "380px",
+        opacity: 0.8,
+        ease: "power2.inOut"
+      }, "<")
+
+      // 5. SPLIT & CORNERS (+ split): Centered unified star splits cleanly along vertical/horizontal axes into 4 quadrant pieces (+) that slide outwards to the 4 corners in full view
+      .add(() => {
+        updateIndicator('STAGE 5: SPLITTING ALONG "+" AXIS TO CORNERS');
+        playSound('split');
+        // Hide unified star, reveal individual quadrant SVG pieces
+        document.getElementById('main-star-svg').style.display = 'none';
+        const qContainer = document.getElementById('split-quadrants-container');
+        qContainer.style.opacity = '1';
+        qContainer.style.pointerEvents = 'auto';
+      })
+
+      // Smoothly slide outwards to the 4 corners
+      .to("#quad-tl", { duration: 0.85, x: -window.innerWidth * 0.43, y: -window.innerHeight * 0.43, scale: 0.85, ease: "power4.out" })
+      .to("#quad-tr", { duration: 0.85, x: window.innerWidth * 0.43, y: -window.innerHeight * 0.43, scale: 0.85, ease: "power4.out" }, "<")
+      .to("#quad-br", { duration: 0.85, x: window.innerWidth * 0.43, y: window.innerHeight * 0.43, scale: 0.85, ease: "power4.out" }, "<")
+      .to("#quad-bl", { duration: 0.85, x: -window.innerWidth * 0.43, y: window.innerHeight * 0.43, scale: 0.85, ease: "power4.out" }, "<")
+
+      // 6. QUADRANT MATRIX CARD: As 4 star parts reach corners, solid opaque central card fades/scales in right in middle
+      .add(() => {
+        updateIndicator('STAGE 6: QUADRANT MATRIX CARD ACTIVE');
+      })
+      .to("#quadrant-matrix-card", {
+        duration: 0.75,
+        opacity: 1,
+        scale: 1,
+        pointerEvents: "auto",
+        ease: "back.out(1.3)"
+      }, "-=0.2");
+    }
+
+
+    // 7. CLICK INITIALIZE CORE: Central card fades out. 4 star parts in corners smoothly slide back along exact vectors to center, perfectly reassembling into unified star.
+    function triggerReassembly() {
+      if (currentStep !== 2) return;
+      currentStep = 3;
+      updateIndicator('STAGE 7: SLIDING BACK FROM CORNERS & REASSEMBLING');
+      playSound('assemble');
+
+      const tl = gsap.timeline();
+
+      tl.to("#quadrant-matrix-card", {
+        duration: 0.4,
+        opacity: 0,
+        scale: 0.85,
+        pointerEvents: "none",
+        ease: "power2.in"
+      })
+
+      // Slide back from the 4 corners to center along exact vectors
+      .to(["#quad-tl", "#quad-tr", "#quad-br", "#quad-bl"], {
+        duration: 0.85,
+        x: 0,
+        y: 0,
+        scale: 1,
+        ease: "power4.inOut",
+        onComplete: () => {
+          triggerShockwave(window.innerWidth / 2, window.innerHeight / 2, '#06b6d4');
+          // Hide quadrant container, restore unified star
+          document.getElementById('split-quadrants-container').style.opacity = '0';
+          document.getElementById('split-quadrants-container').style.pointerEvents = 'none';
+          document.getElementById('main-star-svg').style.display = 'block';
+        }
+      })
+
+      // Perfectly reassembled unified star
+      .to("#main-star-svg", {
+        duration: 0.8,
+        rotation: 360,
+        scale: 1.2,
+        ease: "back.out(1.4)"
+      })
+
+      .to("#star-glow", {
+        duration: 0.8,
+        width: "480px",
+        height: "480px",
+        background: "radial-gradient(circle, rgba(99,102,241,0.5) 0%, rgba(6,182,212,0.25) 50%, rgba(0,0,0,0) 70%)",
+        ease: "power2.out"
+      }, "<")
+
+      // 8. FINAL TRANSITION: Unified star smoothly fades out, final success/welcome card fades in cleanly at center.
+      .add(() => {
+        updateIndicator('STAGE 8: FINAL SUCCESS CARD TRANSITION');
+      })
+      .to("#brand-container", {
+        duration: 0.6,
+        opacity: 0,
+        scale: 0.9,
+        ease: "power2.in",
+        delay: 0.2
+      })
+
+      .to("#final-success-card", {
+        duration: 0.8,
+        opacity: 1,
+        scale: 1,
+        pointerEvents: "auto",
+        ease: "power3.out"
+      });
+    }
+
+
+    // RESET SEQUENCE
+    function resetSequence() {
+      location.reload();
+    }
+  </script>
+</body>
+</html>
