@@ -12,6 +12,7 @@ Instead of settling for generic landing pages, LSP pushes agents to create cohes
 
 | Project | Description |
 |---|---|
+| [Verra](https://verra.pages.dev) | website design |
 | [Ostra](https://ostra-4gu.pages.dev) | water based power generation |
 | [morrow](https://morrow-4ws.pages.dev) |
 | [Obsidian](https://obsidian-lps.pages.dev) | Premium architectural lighting |
