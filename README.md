@@ -12,6 +12,7 @@ Instead of settling for generic landing pages, LSP pushes agents to create cohes
 
 | Project | Description |
 |---|---|
+| [LSP](https://lsp-817.pages.dev) | official LSP site |
 | [Vesper](https://vesper-a37.pages.dev) | lighting too |
 | [Verra](https://verra.pages.dev) | website design |
 | [Ostra](https://ostra-4gu.pages.dev) | water based power generation |
