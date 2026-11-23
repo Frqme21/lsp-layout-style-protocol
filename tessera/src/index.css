@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* 60 / 30 / 10: ink dominant, cobalt secondary, lime accent */
+  --color-ink: oklch(0.1 0.012 265);
+  --color-ink-2: oklch(0.16 0.016 265);
+  --color-ink-3: oklch(0.21 0.02 265);
+  --color-cobalt: oklch(0.5 0.19 262);
+  --color-cobalt-deep: oklch(0.38 0.15 262);
+  --color-cobalt-light: oklch(0.65 0.18 262);
+  --color-lime: oklch(0.93 0.21 120);
+  --color-lime-hover: oklch(0.97 0.19 120);
+  --color-paper: oklch(0.96 0.006 100);
+  --color-paper-dim: oklch(0.88 0.01 100);
+  --color-mute: oklch(0.72 0.014 265);
+  --color-danger: oklch(0.72 0.17 30);
+
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  --default-transition-duration: 400ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+html.locked,
+html.locked body {
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--color-ink);
+}
+
+/* Anything GSAP or CSS transforms gets crisp text and no micro-stutter */
+[style*="transform"],
+.gpu {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 3px;
+}
+
+.dot-grid {
+  background-image: radial-gradient(oklch(1 0 0 / 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* FAQ disclosure without animating layout properties via JS */
+.disclose {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.disclose[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
