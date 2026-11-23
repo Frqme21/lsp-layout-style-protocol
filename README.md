@@ -19,6 +19,7 @@ Instead of settling for generic landing pages, LSP pushes agents to create cohes
 | [morrow](https://morrow-4ws.pages.dev) |
 | [Obsidian](https://obsidian-lps.pages.dev) | Premium architectural lighting |
 | [Aurora](https://aurora-dt4.pages.dev) | Cinematic underwater exploration |
+| [Tessera](https://tessera-demo-8cw.pages.dev) | Tessera demo app (source in `tessera/`) |
 
 These projects demonstrate how LSP can be applied to different brands, visual themes, and storytelling experiences.
 
